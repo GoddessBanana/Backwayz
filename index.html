@@ -3,41 +3,95 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BackWayz</title>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <style>
-body
-<div style="position:absolute;top:100px;left:5%;width:90%;z-index:1000;">
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #173d30;
+}
+
+header {
+  color: white;
+  text-align: center;
+  padding: 12px;
+}
+
+.search-box {
+  padding: 12px;
+  background: #173d30;
+}
+
+#destination {
+  width: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+#map {
+  height: 65vh;
+}
+
+button {
+  padding: 15px;
+  border: 0;
+  border-radius: 10px;
+  background: #a6f4c5;
+}
+
+footer {
+  text-align: center;
+  padding: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>BackWayz</h1>
+  <p>The road less traveled.</p>
+</header>
+
+<div class="search-box">
   <input
     id="destination"
     type="text"
     placeholder="Where do you want to go?"
-    style="width:100%;padding:15px;box-sizing:border-box;border-radius:12px;border:1px solid #ccc;font-size:16px;"
   >
 </div>
-{margin:0;font-family:Arial;background:#173d30}
-header{color:white;text-align:center;padding:12px}
-#map{height:75vh}
-button{padding:15px;border:0;border-radius:10px;background:#a6f4c5}
-footer{text-align:center;padding:15px}
-</style>
-</head>
-<body>
-<header><h1>BackWayz</h1><p>The road less traveled.</p></header>
+
 <div id="map"></div>
-<footer><button onclick="findMe()">Find My Location</button></footer>
+
+<footer>
+  <button onclick="findMe()">Find My Location</button>
+</footer>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-const map=L.map('map').setView([44.3,-69.1],7);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-attribution:'&copy; OpenStreetMap contributors',
-maxZoom:19
+const map = L.map('map').setView([44.3, -69.1], 7);
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 19
 }).addTo(map);
-function findMe(){
-navigator.geolocation.getCurrentPosition(
-p=>map.setView([p.coords.latitude,p.coords.longitude],14),
-()=>alert('Please allow location access.')
-);
+
+function findMe() {
+  navigator.geolocation.getCurrentPosition(
+    p => map.setView(
+      [p.coords.latitude, p.coords.longitude],
+      14
+    ),
+    () => alert('Please allow location access.')
+  );
 }
 </script>
+
 </body>
 </html>
