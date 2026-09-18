@@ -5,7 +5,18 @@
 <title>BackWayz</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-body{margin:0;font-family:Arial;background:#173d30}
+body
+
+<div style="position:absolute;top:15px;left:5%;width:90%;z-index:1000;">
+  <input
+    id="destination"
+    type="text"
+    placeholder="Where do you want to go?"
+    style="width:100%;padding:15px;box-sizing:border-box;border-radius:12px;border:1px solid #ccc;font-size:16px;"
+  >
+</div>
+
+{margin:0;font-family:Arial;background:#173d30}
 header{color:white;text-align:center;padding:12px}
 #map{height:75vh}
 button{padding:15px;border:0;border-radius:10px;background:#a6f4c5}
