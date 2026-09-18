@@ -91,41 +91,90 @@ function findMe() {
     () => alert('Please allow location access.')
   );
 }
+let routeLine;
+
 document.getElementById('destination').addEventListener('keydown', async function(event) {
   if (event.key !== 'Enter') return;
-
   event.preventDefault();
 
   const address = this.value.trim();
   if (!address) return;
 
+  if (!navigator.geolocation) {
+    alert('GPS is not available.');
+    return;
+  }
+
   try {
-    const response = await fetch(
+    const search = await fetch(
       'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
       encodeURIComponent(address)
     );
 
-    if (!response.ok) throw new Error('Search failed');
+    if (!search.ok) throw new Error('Address search failed');
 
-    const results = await response.json();
+    const results = await search.json();
 
-    if (results.length === 0) {
-      alert('Address not found. Try a more specific address.');
+    if (!results.length) {
+      alert('Address not found.');
       return;
     }
 
-    const lat = Number(results[0].lat);
-    const lon = Number(results[0].lon);
+    const destination = [
+      Number(results[0].lat),
+      Number(results[0].lon)
+    ];
 
-    map.setView([lat, lon], 14);
+    navigator.geolocation.getCurrentPosition(async function(position) {
+      try {
+        const start = [
+          position.coords.latitude,
+          position.coords.longitude
+        ];
 
-    L.marker([lat, lon])
-      .addTo(map)
-      .bindPopup(results[0].display_name)
-      .openPopup();
+        const url =
+          'https://router.project-osrm.org/route/v1/driving/' +
+          start[1] + ',' + start[0] + ';' +
+          destination[1] + ',' + destination[0] +
+          '?overview=full&geometries=geojson';
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Routing failed');
+
+        const data = await response.json();
+
+        if (!data.routes || !data.routes.length) {
+          alert('No driving route found.');
+          return;
+        }
+
+        if (routeLine) map.removeLayer(routeLine);
+
+        const coordinates = data.routes[0].geometry.coordinates
+          .map(point => [point[1], point[0]]);
+
+        routeLine = L.polyline(coordinates, {
+          color: 'blue',
+          weight: 5
+        }).addTo(map);
+
+        map.fitBounds(routeLine.getBounds());
+
+        L.marker(start).addTo(map).bindPopup('Your location');
+        L.marker(destination).addTo(map).bindPopup(address);
+
+      } catch (error) {
+        alert('Could not calculate the route.');
+      }
+    }, function() {
+      alert('Please allow location access to calculate your route.');
+    }, {
+      enableHighAccuracy: true,
+      timeout: 15000
+    });
 
   } catch (error) {
-    alert('Address search failed. Please try again.');
+    alert('Could not find that address.');
   }
 });
 </script>
