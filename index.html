@@ -87,6 +87,16 @@ footer {
 </select>
   Go
 </button>
+
+<div id="routeInfo" style="
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  background:white;
+  border-radius:10px;
+  font-size:15px;
+">
+</div>
 </div>
 
 <div id="map"></div>
@@ -231,6 +241,25 @@ const routeData = await routeResponse.json();
     if (!routeData.routes || !routeData.routes.length) {
       throw new Error("No route found");
     }
+const route = routeData.routes[0];
+
+const miles = route.distance / 1609.344;
+const minutes = Math.round(route.duration / 60);
+
+const modeNames = {
+  fastest: "Fastest Route",
+  avoidHighways: "Avoid Highways",
+  backwayz: "BackWayz Route"
+};
+
+const routeInfo = document.getElementById('routeInfo');
+
+routeInfo.innerHTML =
+  `<strong>${modeNames[routeMode]}</strong> • ` +
+  `${miles.toFixed(1)} miles • ` +
+  `${minutes} min`;
+
+routeInfo.style.display = "block";
 
     if (routeLine) {
       map.removeLayer(routeLine);
