@@ -252,12 +252,71 @@ const modeNames = {
   backwayz: "BackWayz Route"
 };
 
-const routeInfo = document.getElementById('routeInfo');
+let comparisonText = "";
+
+if (routeMode !== "fastest") {
+
+  const fastestRequest = {
+    locations: [
+      {
+        lat: start.lat,
+        lon: start.lon
+      },
+      {
+        lat: destination.lat,
+        lon: destination.lon
+      }
+    ],
+
+    costing: "auto",
+
+    costing_options: {
+      auto: {
+        use_highways: 0.5,
+        use_tolls: 0.5,
+        use_living_streets: 0.1,
+        use_tracks: 0
+      }
+    },
+
+    units: "miles",
+    format: "osrm",
+    shape_format: "geojson"
+  };
+
+  try {
+    const fastestResponse = await fetch(
+      'https://valhalla1.openstreetmap.de/route?json=' +
+      encodeURIComponent(JSON.stringify(fastestRequest))
+    );
+
+    const fastestData = await fastestResponse.json();
+
+    if (fastestData.routes && fastestData.routes.length) {
+
+      const fastestMinutes =
+        Math.round(fastestData.routes[0].duration / 60);
+
+      const extraMinutes = minutes - fastestMinutes;
+
+      if (extraMinutes > 0) {
+        comparisonText =
+          ` • +${extraMinutes} min vs fastest`;
+      }
+    }
+
+  } catch (error) {
+    console.log("Fastest-route comparison unavailable.");
+  }
+}
+
+const routeInfo =
+  document.getElementById('routeInfo');
 
 routeInfo.innerHTML =
-  `<strong>${modeNames[routeMode]}</strong> • ` +
-  `${miles.toFixed(1)} miles • ` +
-  `${minutes} min`;
+  `<strong>${modeNames[routeMode]}</strong><br>` +
+  `${miles.toFixed(1)} miles • ${minutes} min` +
+  comparisonText;
 
 routeInfo.style.display = "block";
 
