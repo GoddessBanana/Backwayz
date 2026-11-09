@@ -99,6 +99,19 @@ footer {
 </div>
 </div>
 
+<div id="directions" style="
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  background:white;
+  border-radius:10px;
+  max-height:260px;
+  overflow-y:auto;
+  font-size:15px;
+">
+</div>
+
+
 <div id="map"></div>
 
 <footer>
@@ -223,8 +236,8 @@ const valhallaRequest = {
     auto: costingOptions
   },
   units: "miles",
-  format: "osrm",
-  shape_format: "geojson"
+directions_options: {
+  units: "miles"
 };
 
 const routeResponse = await fetch(
@@ -238,13 +251,13 @@ if (!routeResponse.ok) {
 
 const routeData = await routeResponse.json();
 
-    if (!routeData.routes || !routeData.routes.length) {
-      throw new Error("No route found");
-    }
-const route = routeData.routes[0];
+    if (!routeData.trip || !routeData.trip.legs || !routeData.trip.legs.length) {
+  throw new Error("No route found");
+}
+const route = routeData.trip;
 
-const miles = route.distance / 1609.344;
-const minutes = Math.round(route.duration / 60);
+const miles = route.summary.length;
+const minutes = Math.round(route.summary.time / 60);
 
 const modeNames = {
   fastest: "Fastest Route",
@@ -280,8 +293,7 @@ if (routeMode !== "fastest") {
     },
 
     units: "miles",
-    format: "osrm",
-    shape_format: "geojson"
+    
   };
 
   try {
@@ -332,7 +344,56 @@ routeInfo.style.display = "block";
       map.removeLayer(destinationMarker);
     }
 
-    routeLine = L.geoJSON(routeData.routes[0].geometry).addTo(map);
+    function decodePolyline6(encoded) {
+  let index = 0;
+  let lat = 0;
+  let lon = 0;
+  const coordinates = [];
+
+  while (index < encoded.length) {
+    let result = 0;
+    let shift = 0;
+    let byte;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    const deltaLat = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lat += deltaLat;
+
+    result = 0;
+    shift = 0;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    const deltaLon = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lon += deltaLon;
+
+    coordinates.push([
+      lat / 1e6,
+      lon / 1e6
+    ]);
+  }
+
+  return coordinates;
+}
+
+const routeCoordinates = [];
+
+routeData.trip.legs.forEach(leg => {
+  routeCoordinates.push(...decodePolyline6(leg.shape));
+});
+
+routeLine = L.polyline(routeCoordinates, {
+  weight: 5
+}).addTo(map);
 
     startMarker = L.marker([start.lat, start.lon])
       .addTo(map)
@@ -345,6 +406,21 @@ routeInfo.style.display = "block";
     map.fitBounds(routeLine.getBounds(), {
       padding: [40, 40]
     });
+
+const directionsBox = document.getElementById('directions');
+
+let directionsHtml = '<strong>Turn-by-turn directions</strong><ol>';
+
+routeData.trip.legs.forEach(leg => {
+  leg.maneuvers.forEach(maneuver => {
+    directionsHtml += `<li style="margin-bottom:8px;">${maneuver.instruction}</li>`;
+  });
+});
+
+directionsHtml += '</ol>';
+
+directionsBox.innerHTML = directionsHtml;
+directionsBox.style.display = 'block';
 
   } catch (error) {
     alert(error.message || "Could not build the route.");
