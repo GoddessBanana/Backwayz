@@ -85,6 +85,8 @@ footer {
   <option value="avoidHighways">Avoid Highways</option>
   <option value="backwayz">BackWayz Route</option>
 </select>
+
+<button onclick="buildRoute()" style="width:100%; margin-top:8px;">
   Go
 </button>
 
@@ -238,6 +240,7 @@ const valhallaRequest = {
   units: "miles",
 directions_options: {
   units: "miles"
+}
 };
 
 const routeResponse = await fetch(
