@@ -7,41 +7,97 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
+:root {
+  --blurple: #5865F2;
+  --pink: #FF007F;
+  --charcoal: #1A1A24;
+  --white: #FFFFFF;
+  --light: #F7F7FB;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #173d30;
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  background: var(--charcoal);
+  color: var(--white);
 }
 
 header {
-  color: white;
+  background: var(--charcoal);
   text-align: center;
-  padding: 5px;
+  padding: 6px;
 }
 
 header h1 {
   margin: 4px 0;
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--blurple);
+  text-shadow: 0 0 12px rgba(88, 101, 242, 0.35);
 }
 
 header p {
   margin: 2px 0 6px;
+  color: var(--white);
   font-size: 13px;
+  opacity: 0.9;
 }
 
 .search-box {
-  padding: 12px;
-  background: #173d30;
+  padding: 6px;
+  background: var(--charcoal);
 }
 
 #start,
 #destination {
   width: 100%;
-  padding: 7px 9px;
+  padding: 8px 10px;
   box-sizing: border-box;
-  border-radius: 7px;
-  border: 1px solid #ccc;
-  font-size: 13px;
+  border-radius: 8px;
+  border: 2px solid var(--blurple);
+  background: var(--white);
+  color: var(--charcoal);
+  font-size: 14px;
+  outline: none;
+}
+
+#start:focus,
+#destination:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 2px rgba(255, 0, 127, 0.18);
+}
+
+button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--blurple);
+  color: var(--white);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(88, 101, 242, 0.25);
+}
+
+button:hover,
+button:active {
+  background: var(--pink);
+}
+
+#routeInfo,
+#currentTurn,
+#directions,
+#routeMenu {
+  background: rgba(26, 26, 36, 0.97);
+  color: var(--white);
+  border: 2px solid var(--blurple);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+
+.route-active,
+.direction-step.active {
+  background: var(--pink);
+  color: var(--white);
+  border-radius: 8px;
 }
 
 .search-box {
@@ -203,13 +259,12 @@ footer {
   </div>
 
   <div id="routeMenu">
-    <button onclick="setRouteMode('fastest')">Fastest Route</button>
+    <button onclick="setRouteMode('fastest')">Fastest</button>
     <button onclick="setRouteMode('avoidHighways')">Avoid Highways</button>
-    <button onclick="setRouteMode('backwayz')">BackWayz Route</button>
+    <button onclick="setRouteMode('backwayz')">BackWayz</button>
   </div>
 
-  <div id="directions">
-  </div>
+  <div id="directions"></div>
 
 </div>
 
