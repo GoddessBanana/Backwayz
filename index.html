@@ -484,13 +484,6 @@ routeData.trip.legs.forEach(leg => {
   routeIndexOffset += legCoordinates.length;
 });
 
-    directionsHtml += `
-      <li class="direction-step" style="margin-bottom:8px;">
-        ${maneuver.instruction}
-      </li>
-    `;
-  });
-});
 
 directionsHtml += '</ol>';
 
