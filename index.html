@@ -225,7 +225,8 @@ if (routeMode === 'avoidHighways') {
     use_highways: 0,
     use_tolls: 0.2,
     use_living_streets: 0.2,
-    use_tracks: 0
+    use_tracks: 0,
+    exclude_highways: true
   };
 }
 
@@ -234,7 +235,8 @@ if (routeMode === 'backwayz') {
     use_highways: 0,
     use_tolls: 0,
     use_living_streets: 0.8,
-    use_tracks: 0
+    use_tracks: 0,
+    exclude_highways: true
   };
 }
 
@@ -273,6 +275,8 @@ const routeData = await routeResponse.json();
     if (!routeData.trip || !routeData.trip.legs || !routeData.trip.legs.length) {
   throw new Error("No route found");
 }
+
+
 const route = routeData.trip;
 
 const miles = route.summary.length;
@@ -285,6 +289,25 @@ const modeNames = {
 };
 
 let comparisonText = "";
+
+let highwayWarning = "";
+
+if (
+  (routeMode === "avoidHighways" || routeMode === "backwayz") &&
+  routeData.trip.summary.has_highway
+) {
+  highwayWarning =
+    `<div style="
+      margin-top:8px;
+      padding:8px;
+      border-radius:8px;
+      background:#fff3cd;
+      font-size:14px;
+    ">
+      ⚠️ A completely highway-free route was not available.
+      This route still includes some highway.
+    </div>`;
+}
 
 if (routeMode !== "fastest") {
 
@@ -347,7 +370,8 @@ const routeInfo =
 routeInfo.innerHTML =
   `<strong>${modeNames[routeMode]}</strong><br>` +
   `${miles.toFixed(1)} miles • ${minutes} min` +
-  comparisonText;
+  comparisonText +
+  highwayWarning;
 
 routeInfo.style.display = "block";
 
