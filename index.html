@@ -197,6 +197,31 @@ footer {
     </div>
   </div>
 
+  <div id="mapControls">
+    <button onclick="toggleRouteMenu()">Route</button>
+    <button onclick="toggleDirections()">Directions</button>
+  </div>
+
+  <div id="routeMenu">
+    <button onclick="setRouteMode('fastest')">Fastest Route</button>
+    <button onclick="setRouteMode('avoidHighways')">Avoid Highways</button>
+    <button onclick="setRouteMode('backwayz')">BackWayz Route</button>
+  </div>
+
+  <div id="directions">
+  </div>
+
+</div>
+
+  <div id="map"></div>
+
+  <div id="currentTurn">
+    <strong>Next turn</strong>
+    <div id="currentTurnText">
+      Start navigation to see your next turn.
+    </div>
+  </div>
+
 </div>
 
 <footer>
