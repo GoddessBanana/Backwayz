@@ -99,7 +99,18 @@ footer {
   font-size:15px;
 ">
 </div>
-</div>
+
+<button
+  id="startNavigation"
+  onclick="startNavigation()"
+  style="
+    display:none;
+    width:100%;
+    margin-top:10px;
+  "
+>
+  Start Navigation
+</button>
 
 <div id="directions" style="
   display:none;
@@ -142,6 +153,11 @@ function findMe() {
 let routeLine;
 let startMarker;
 let destinationMarker;
+
+let navigationWatchId = null;
+let navigationMarker = null;
+let navigationSteps = [];
+let currentNavigationStep = 0;
 
 async function geocodeAddress(address) {
   const response = await fetch(
@@ -414,9 +430,24 @@ const directionsBox = document.getElementById('directions');
 
 let directionsHtml = '<strong>Turn-by-turn directions</strong><ol>';
 
+navigationSteps = [];
+
 routeData.trip.legs.forEach(leg => {
+  const legCoordinates = decodePolyline6(leg.shape);
+
   leg.maneuvers.forEach(maneuver => {
-    directionsHtml += `<li style="margin-bottom:8px;">${maneuver.instruction}</li>`;
+    const point = legCoordinates[maneuver.begin_shape_index];
+
+    navigationSteps.push({
+      instruction: maneuver.instruction,
+      coordinate: point
+    });
+
+    directionsHtml += `
+      <li class="direction-step" style="margin-bottom:8px;">
+        ${maneuver.instruction}
+      </li>
+    `;
   });
 });
 
@@ -424,7 +455,7 @@ directionsHtml += '</ol>';
 
 directionsBox.innerHTML = directionsHtml;
 directionsBox.style.display = 'block';
-
+document.getElementById('startNavigation').style.display = 'block';
   } catch (error) {
     alert(error.message || "Could not build the route.");
   }
@@ -443,6 +474,76 @@ document.getElementById('start').addEventListener('keydown', function(event) {
     buildRoute();
   }
 });
+
+function startNavigation() {
+  if (!navigationSteps.length) {
+    alert("Build a route first.");
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    alert("GPS is not available on this device.");
+    return;
+  }
+
+  currentNavigationStep = 0;
+
+  if (navigationWatchId !== null) {
+    navigator.geolocation.clearWatch(navigationWatchId);
+  }
+
+  navigationWatchId = navigator.geolocation.watchPosition(
+    position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      if (!navigationMarker) {
+        navigationMarker = L.marker([lat, lon]).addTo(map);
+      } else {
+        navigationMarker.setLatLng([lat, lon]);
+      }
+
+      map.setView([lat, lon], 17);
+
+      const steps = document.querySelectorAll('.direction-step');
+
+      steps.forEach((step, index) => {
+        step.style.fontWeight =
+          index === currentNavigationStep ? 'bold' : 'normal';
+
+        step.style.background =
+          index === currentNavigationStep ? '#a6f4c5' : 'transparent';
+
+        step.style.padding =
+          index === currentNavigationStep ? '8px' : '0';
+      });
+
+      const nextStep = navigationSteps[currentNavigationStep];
+
+      if (nextStep && nextStep.coordinate) {
+        const distance = map.distance(
+          [lat, lon],
+          nextStep.coordinate
+        );
+
+        if (distance < 35 && currentNavigationStep < navigationSteps.length - 1) {
+          currentNavigationStep++;
+        }
+      }
+    },
+
+    () => {
+      alert("Please allow location access for navigation.");
+    },
+
+    {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 15000
+    }
+  );
+}
+
 </script>
 
 </body>
