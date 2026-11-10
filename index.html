@@ -158,6 +158,7 @@ let navigationWatchId = null;
 let navigationMarker = null;
 let navigationSteps = [];
 let currentNavigationStep = 0;
+let routeCoordinates = [];
 
 async function geocodeAddress(address) {
   const response = await fetch(
@@ -428,7 +429,7 @@ routeInfo.style.display = "block";
   return coordinates;
 }
 
-const routeCoordinates = [];
+routeCoordinates = [];
 
 routeData.trip.legs.forEach(leg => {
   routeCoordinates.push(...decodePolyline6(leg.shape));
@@ -456,16 +457,32 @@ let directionsHtml = '<strong>Turn-by-turn directions</strong><ol>';
 
 navigationSteps = [];
 
+navigationSteps = [];
+
+let routeIndexOffset = 0;
+
 routeData.trip.legs.forEach(leg => {
   const legCoordinates = decodePolyline6(leg.shape);
 
   leg.maneuvers.forEach(maneuver => {
-    const point = legCoordinates[maneuver.begin_shape_index];
+    const localIndex = maneuver.begin_shape_index;
+    const point = legCoordinates[localIndex];
 
     navigationSteps.push({
       instruction: maneuver.instruction,
-      coordinate: point
+      coordinate: point,
+      routeIndex: routeIndexOffset + localIndex
     });
+
+    directionsHtml += `
+      <li class="direction-step" style="margin-bottom:8px;">
+        ${maneuver.instruction}
+      </li>
+    `;
+  });
+
+  routeIndexOffset += legCoordinates.length;
+});
 
     directionsHtml += `
       <li class="direction-step" style="margin-bottom:8px;">
@@ -542,18 +559,39 @@ function startNavigation() {
           index === currentNavigationStep ? '8px' : '0';
       });
 
-      const nextStep = navigationSteps[currentNavigationStep];
+      // Ignore very inaccurate GPS readings
+if (position.coords.accuracy > 60) {
+  return;
+}
 
-      if (nextStep && nextStep.coordinate) {
-        const distance = map.distance(
-          [lat, lon],
-          nextStep.coordinate
-        );
+// Find the point on the route closest to the user's real GPS position
+let nearestRouteIndex = 0;
+let nearestDistance = Infinity;
 
-        if (distance < 35 && currentNavigationStep < navigationSteps.length - 1) {
-          currentNavigationStep++;
-        }
-      }
+routeCoordinates.forEach((point, index) => {
+  const distance = map.distance([lat, lon], point);
+
+  if (distance < nearestDistance) {
+    nearestDistance = distance;
+    nearestRouteIndex = index;
+  }
+});
+
+// Don't advance directions if the user is too far away from the route
+if (nearestDistance < 80) {
+
+  let newStep = currentNavigationStep;
+
+  for (let i = currentNavigationStep; i < navigationSteps.length; i++) {
+    if (nearestRouteIndex >= navigationSteps[i].routeIndex) {
+      newStep = i;
+    } else {
+      break;
+    }
+  }
+
+  currentNavigationStep = newStep;
+}
     },
 
     () => {
