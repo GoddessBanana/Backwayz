@@ -83,7 +83,28 @@ button:active {
   background: var(--pink);
 }
 
-#routeInfo,
+#routeInfo {
+  display: none;
+  margin: 6px 0;
+  padding: 8px 10px;
+
+  background: var(--charcoal);
+  color: var(--white);
+
+  border: 2px solid var(--blurple);
+  border-radius: 9px;
+
+  font-size: 13px;
+  line-height: 1.25;
+
+  box-shadow: 0 3px 10px rgba(0,0,0,.28);
+}
+
+#routeInfo strong {
+  color: var(--pink);
+  font-size: 14px;
+}
+
 #currentTurn,
 #directions,
 #routeMenu {
@@ -157,47 +178,86 @@ button:active {
   box-shadow: 0 4px 16px rgba(0,0,0,.4);
 }
 
-#mapControls {
+#optionsToggle {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  z-index: 1100;
+  top: 10px;
+  right: 10px;
+  z-index: 1200;
 
-  display: flex;
-  gap: 6px;
-}
+  padding: 8px 13px;
 
-#mapControls button {
-  padding: 8px 12px;
+  background: var(--blurple);
+  color: white;
+
+  border: 0;
+  border-radius: 9px;
+
   font-size: 13px;
+  font-weight: 800;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,.4);
 }
 
-#routeMenu {
+#optionsMenu {
   display: none;
+
   position: absolute;
-  right: 8px;
-  bottom: 52px;
-  z-index: 1150;
+  top: 52px;
+  right: 10px;
 
-  background: rgba(26, 26, 36, 0.98);
+  z-index: 1200;
+
+  width: 190px;
+
+  padding: 8px;
+
+  background: rgba(26,26,36,.98);
+
   border: 2px solid var(--blurple);
-  border-radius: 10px;
+  border-radius: 12px;
 
-  padding: 6px;
-
-  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  box-shadow: 0 5px 18px rgba(0,0,0,.45);
 }
 
-#routeMenu button {
+#optionsMenu button {
   display: block;
+
   width: 100%;
+
   margin: 4px 0;
-  padding: 8px 12px;
-  white-space: nowrap;
+  padding: 9px;
+
+  background: var(--blurple);
+  color: white;
+
+  border: 0;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 700;
 }
 
-#routeMenu button:last-child {
+#optionsMenu button:hover,
+#optionsMenu button:active {
   background: var(--pink);
+}
+
+#optionsMenu .route-selected {
+  background: var(--pink);
+}
+
+.menu-title {
+  padding: 5px 4px;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.menu-divider {
+  height: 1px;
+  margin: 7px 2px;
+  background: var(--blurple);
 }
 
 
@@ -244,14 +304,7 @@ footer {
   Go
 </button>
 
-<div id="routeInfo" style="
-  display:none;
-  margin-top:10px;
-  padding:12px;
-  background:white;
-  border-radius:10px;
-  font-size:15px;
-">
+<div id="routeInfo">
 </div>
 
 <button
@@ -260,7 +313,8 @@ footer {
   style="
     display:none;
     width:100%;
-    margin-top:10px;
+    margin-top:6px;
+    padding:9px;
   "
 >
   Start Navigation
@@ -274,16 +328,33 @@ footer {
   <div id="map"></div>
 
 
-  <div id="mapControls">
-    <button onclick="toggleRouteMenu()">Route</button>
-    <button onclick="toggleDirections()">Directions</button>
-  </div>
+ <button id="optionsToggle" onclick="toggleOptionsMenu()">
+  Options ▾
+</button>
 
-  <div id="routeMenu">
-    <button onclick="setRouteMode('fastest')">Fastest</button>
-    <button onclick="setRouteMode('avoidHighways')">Avoid Highways</button>
-    <button onclick="setRouteMode('backwayz')">BackWayz</button>
-  </div>
+<div id="optionsMenu">
+
+  <div class="menu-title">Route</div>
+
+  <button class="route-option" onclick="setRouteMode('fastest', this)">
+    Fastest Route
+  </button>
+
+  <button class="route-option" onclick="setRouteMode('avoidHighways', this)">
+    Avoid Highways
+  </button>
+
+  <button class="route-option" onclick="setRouteMode('backwayz', this)">
+    BackWayz Route
+  </button>
+
+  <div class="menu-divider"></div>
+
+  <button onclick="toggleDirections()">
+    Show / Hide Directions
+  </button>
+
+</div>
 
   <div id="directions"></div>
 
@@ -475,7 +546,9 @@ if (
       margin-top:8px;
       padding:8px;
       border-radius:8px;
-      background:#fff3cd;
+      background:#2A2030;
+border:1px solid #FF007F;
+color:#FFFFFF;
       font-size:14px;
     ">
       ⚠️ A completely highway-free route was not available.
@@ -773,6 +846,45 @@ if (nearestDistance < 80) {
       timeout: 15000
     }
   );
+}
+
+function toggleOptionsMenu() {
+  const menu = document.getElementById('optionsMenu');
+
+  menu.style.display =
+    menu.style.display === 'block' ? 'none' : 'block';
+}
+
+function setRouteMode(mode, button) {
+  document.getElementById('routeMode').value = mode;
+
+  document.querySelectorAll('.route-option').forEach(btn => {
+    btn.classList.remove('route-selected');
+  });
+
+  if (button) {
+    button.classList.add('route-selected');
+  }
+
+  document.getElementById('optionsMenu').style.display = 'none';
+
+  const destination =
+    document.getElementById('destination').value.trim();
+
+  if (destination) {
+    buildRoute();
+  }
+}
+
+function toggleDirections() {
+  const directions = document.getElementById('directions');
+
+  directions.style.display =
+    directions.style.display === 'block'
+      ? 'none'
+      : 'block';
+
+  document.getElementById('optionsMenu').style.display = 'none';
 }
 
 </script>
