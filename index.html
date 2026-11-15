@@ -403,6 +403,7 @@ let navigationMarker = null;
 let navigationSteps = [];
 let currentNavigationStep = 0;
 let routeCoordinates = [];
+let currentRouteIndex = 0;
 
 async function geocodeAddress(address) {
   const response = await fetch(
